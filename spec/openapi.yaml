@@ -1673,7 +1673,7 @@ components:
         This token MUST be copied verbatim from the `nextPageToken` value returned by the previous response.
         Clients MUST NOT parse, construct, or modify this token.
 
-        The token represents continuation state for the original query, including `pageSize`,
+        The token represents continuation state for the original query, including
         `sortField`, `sortOrder`, result-affecting filters such as `idType` and `idValue`,
         and path parameters such as parent `uuid`.
         When `pageToken` is supplied, clients MUST NOT change those result-affecting query
