@@ -281,7 +281,7 @@ paths:
         # For pagination
         - $ref: "#/components/parameters/page-size"
         - $ref: "#/components/parameters/page-token"
-        - $ref: "#/components/parameters/sort-field-component"
+        - $ref: "#/components/parameters/sort-field-component-release"
         - $ref: "#/components/parameters/sort-order"
       responses:
         '200':
@@ -1483,20 +1483,24 @@ components:
         hasNext:
           type: boolean
           description: |
-            A flag (to aid clients) to know whether there is a next page of results to fetch. 
-            
-            `nextPageToken` will always be supplied, hence this hint is included to aid clients.
+            A flag indicating whether there is another page of results to fetch.
+
+            When `hasNext` is `true`, `nextPageToken` MUST be present.
+            When `hasNext` is `false`, `nextPageToken` MUST NOT be included.
           default: false
         nextPageToken:
           type: string
-          nullable: false
           description: |
-            A token that can be used in a following request to retrieve the next page or results.
+            An opaque token that can be used in a following request to retrieve the next page of results.
 
-            It must always be supplied in responses.
+            This field MUST be present when `hasNext` is `true`.
+            This field MUST NOT be included when `hasNext` is `false`.
       required:
         - hasNext
-        - nextPageToken
+      examples:
+        - hasNext: true
+          nextPageToken: eyJwYWdlIjoiY29udGludWF0aW9uIn0
+        - hasNext: false
     paginated-product-response:
       description: A paginated response containing TEA Products
       allOf:
@@ -1509,6 +1513,12 @@ components:
                 $ref: "#/components/schemas/product"
           required:
             - results
+      examples:
+        - hasNext: true
+          nextPageToken: eyJwYWdlIjoiY29udGludWF0aW9uIn0
+          results: []
+        - hasNext: false
+          results: []
     paginated-product-release-response:
       description: A paginated response containing TEA Product Releases
       allOf:
@@ -1521,6 +1531,12 @@ components:
                 $ref: "#/components/schemas/productRelease"
           required:
             - results
+      examples:
+        - hasNext: true
+          nextPageToken: eyJwYWdlIjoiY29udGludWF0aW9uIn0
+          results: []
+        - hasNext: false
+          results: []
     paginated-component-response:
       description: A paginated response containing TEA Components
       allOf:
@@ -1533,6 +1549,12 @@ components:
                 $ref: "#/components/schemas/component"
           required:
             - results
+      examples:
+        - hasNext: true
+          nextPageToken: eyJwYWdlIjoiY29udGludWF0aW9uIn0
+          results: []
+        - hasNext: false
+          results: []
     paginated-component-release-response:
       description: A paginated response containing TEA Component Releases
       allOf:
@@ -1545,6 +1567,12 @@ components:
                 $ref: "#/components/schemas/release"
           required:
             - results
+      examples:
+        - hasNext: true
+          nextPageToken: eyJwYWdlIjoiY29udGludWF0aW9uIn0
+          results: []
+        - hasNext: false
+          results: []
     paginated-collection-response:
       description: A paginated response containing TEA Collections
       allOf:
@@ -1557,6 +1585,12 @@ components:
                 $ref: "#/components/schemas/collection"
           required:
             - results
+      examples:
+        - hasNext: true
+          nextPageToken: eyJwYWdlIjoiY29udGludWF0aW9uIn0
+          results: []
+        - hasNext: false
+          results: []
 
   responses:
     204-common-delete:
@@ -1564,7 +1598,10 @@ components:
       content:
         application/json: {}
     400-invalid-request:
-      description: Request was Invalid
+      description: |
+        Request was invalid. For paginated requests, this includes malformed, invalid,
+        expired, or conflicting `pageToken` values, including conflicts with continuation
+        parameters or path parameters.
       content:
         application/json: {}
     401-unauthorized:
@@ -1632,15 +1669,38 @@ components:
     page-token:
       name: pageToken
       description: |
-        An opaque token used to retrieve the next page of results. 
-        This should be copied exactly from the `nextPageToken` field of a previous response.
+        An opaque continuation token produced by a previous response.
+        This token MUST be copied verbatim from the `nextPageToken` value returned by the previous response.
+        Clients MUST NOT parse, construct, or modify this token.
+
+        The token represents continuation state for the original query, including
+        `sortField`, `sortOrder`, result-affecting filters such as `idType` and `idValue`,
+        and path parameters such as parent `uuid`.
+        When `pageToken` is supplied, clients MUST NOT change those result-affecting query
+        parameters. Servers MUST return `400 Bad Request` if supplied result-affecting query
+        parameters conflict with the token state. To change any result-affecting parameter,
+        clients MUST start a new pagination sequence without `pageToken`.
+
+        A `pageToken` is only valid with the same request path and same path parameter values
+        used to obtain it. Clients MUST NOT reuse a `pageToken` across different parent
+        resource paths or different path `uuid` values. Servers MUST return `400 Bad Request`
+        when a `pageToken` is used with a different path or different path parameter values.
+
+        Servers MUST return `400 Bad Request` for malformed, invalid, expired, or conflicting
+        `pageToken` values.
       in: query
       required: false
       schema:
         type: string
     sort-order:
       name: sortOrder
-      description: The direction of the sort.
+      description: |
+        The direction of the sort.
+
+        The selected sort order applies to both the primary `sortField` and the
+        resource-specific deterministic secondary tie-breaker. For products, components,
+        product releases, and component releases, the secondary key is `uuid`. For collections,
+        the secondary key is `version` if additional tie-breaking is needed.
       in: query
       required: false
       schema:
@@ -1652,7 +1712,16 @@ components:
     # Pagination Sort Fields per TEA Object Type
     sort-field-collection:
       name: sortField
-      description: The field by which to sort the results.
+      description: |
+        The field by which to sort the results.
+
+        Paginated collection results MUST be ordered first by the selected `sortField`,
+        then by `version` as the deterministic secondary key if additional tie-breaking
+        is needed. Collection UUIDs are not used as tie-breakers because collection UUIDs
+        match the associated release UUID and can be shared across collection revisions.
+
+        The only currently supported collection `sortField` is `version`, so the secondary
+        `version` key is redundant unless additional collection sort fields are added later.
       in: query
       required: false
       schema:
@@ -1662,7 +1731,11 @@ components:
         default: version
     sort-field-component:
       name: sortField
-      description: The field by which to sort the results.
+      description: |
+        The field by which to sort the results.
+
+        Paginated results MUST be ordered first by the selected `sortField`, then by `uuid`
+        as a deterministic secondary tie-breaker.
       in: query
       required: false
       schema:
@@ -1672,7 +1745,20 @@ components:
         default: name
     sort-field-component-release:
       name: sortField
-      description: The field by which to sort the results.
+      description: |
+        The field by which to sort the results.
+
+        Paginated results MUST be ordered first by the selected `sortField`, then by `uuid`
+        as a deterministic secondary tie-breaker.
+
+        When `version` is selected, ordering is by the stored version string according to
+        the server's documented string collation; semantic-version precedence is not implied.
+        Servers MUST apply a stable and deterministic string collation for version sorting,
+        and the same collation MUST be used consistently across pages for a pagination sequence.
+
+        When `releaseDate` is selected, releases without a `releaseDate` MUST be ordered
+        consistently. Missing `releaseDate` values sort after populated `releaseDate` values
+        for ascending order and before populated `releaseDate` values for descending order.
       in: query
       required: false
       schema:
@@ -1684,7 +1770,11 @@ components:
         default: createdDate
     sort-field-product:
       name: sortField
-      description: The field by which to sort the results.
+      description: |
+        The field by which to sort the results.
+
+        Paginated results MUST be ordered first by the selected `sortField`, then by `uuid`
+        as a deterministic secondary tie-breaker.
       in: query
       required: false
       schema:
@@ -1694,7 +1784,20 @@ components:
         default: name
     sort-field-product-release:
       name: sortField
-      description: The field by which to sort the results.
+      description: |
+        The field by which to sort the results.
+
+        Paginated results MUST be ordered first by the selected `sortField`, then by `uuid`
+        as a deterministic secondary tie-breaker.
+
+        When `version` is selected, ordering is by the stored version string according to
+        the server's documented string collation; semantic-version precedence is not implied.
+        Servers MUST apply a stable and deterministic string collation for version sorting,
+        and the same collation MUST be used consistently across pages for a pagination sequence.
+
+        When `releaseDate` is selected, releases without a `releaseDate` MUST be ordered
+        consistently. Missing `releaseDate` values sort after populated `releaseDate` values
+        for ascending order and before populated `releaseDate` values for descending order.
       in: query
       required: false
       schema:
