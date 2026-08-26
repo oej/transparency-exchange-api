@@ -1,17 +1,14 @@
-# TEA Collections
+# TEA Collection object
 
-## TEA Collection object (TCO)
-
-For each product and version there is a Tea Collection object, which is a list
-of available artefacts for this specific version. The TEA Index is a list of
-TEA collections.
+For each product and version there is a Tea Collection object (TCO), which is a list
+of available artefacts for this specific version.
 
 The TEA collection is normally created by the TEA application server at
 publication time of artefacts. The publisher may sign the collection
 object as a JSON file at time of publication.
 
 If there are any updates of artefacts within a collection for the same
-version of a product, then a new TEA Collection object is created and signed.
+version of a product, then a new TEA Collection object is created and optionally signed.
 This update will have the same UUID, but a new version number. A reason
 for the update will have to be provided. This shall be used to
 correct mistakes, spelling errors as well as to provide new information
@@ -24,33 +21,32 @@ or a specific version.
 
 ### Dynamic or static Collection objects
 
-The TCO is produced by the TEA software platform. There are two ways
+The TCO is managed by the TEA software platform. There are two ways
 to implement this:
 
-* __Dynamic__: The TCO is built for each API request and created
+- __Dynamic__: The TCO is built for each API request and created
   dynamically.
-* __Static__: The TCO is built at publication time as a static
+- __Static__: The TCO is built at publication time as a static
   object by the publisher. This object can be digitally signed at
   publication time and version controlled.
 
 ### Collection object
 
-  The TEA Collection object has the following parts:
+The TEA Collection object has the following parts:
 
-  - Preamble
-  - __uuid__: UUID of the TEA Collection object.
-    Note that this is equal to the UUID of the associated TEA Component Release object.
+- Preamble
+- __uuid__: UUID of the TEA Collection object.
+    This matches the UUID of the associated TEA Component Release object.
     When updating a collection, only the `version` is changed.
-  - __version__: TEA Collection version, incremented each time its content changes.
+- __version__: TEA Collection version, incremented each time its content changes.
     Versions start with 1.
-  - __date__: TEA Collection version release date.
-  - __belongsTo__: Scope of the collection; enum values `RELEASE` or `PRODUCT_RELEASE`.
-  - __updateReason__: Reason for the update/release of the TEA Collection object.
-    - __type__: Type of update reason.
+- __createdDate__: Timestamp when the TEA Collection version was created.
+- __belongsTo__: Indicates whether this collection belongs to a Component Release or a Product Release. Enum values `COMPONENT_RELEASE` or `PRODUCT_RELEASE`.
+- __updateReason__: Reason for the update/release of the TEA Collection object.
+  - __type__: Type of update reason.
       See [reasons for TEA Collection update](#the-reason-for-tco-update-enum) below.
-    - __comment__: Free text description.
-  -
-  - __artifacts__: List of TEA Artifact objects.
+  - __comment__: Free text description.
+- __artifacts__: Array of TEA Artifact objects.
     See [below](#tea-artifact-object).
 
 ## TEA Artifact object
@@ -75,25 +71,27 @@ A TEA Artifact object contains the following fields:
 - __version__:
   An integer with default value 1.
   Together with *uuid* uniquely identifies the TEA Artifact.
-  This field can be used to designate successive, immutable revisions of an artefact content (e.g. an updated VEX file).
-- __name__: A human-readable name for the artefact.
-- __type__: The type of artefact. See [TEA Artifact types](#tea-artefact-types) for allowed values (e.g., `BOM`, `VULNERABILITIES`, `LICENSE`).
-- __createdDate__: The date and time the TEA Artefact revision was created.
-- __componentDistributions__ (optional):  
-  An array of `distributionType` identifiers indicating which distributions this TEA Artifact applies to.
-  If omitted, the TEA Artifact applies to all distributions.
+  This field can be used to designate successive, immutable revisions of an artifact content (e.g. an updated VEX file).
+- __name__: A human-readable name for the artifact.
+- __type__: The type of TEA artifact. See [TEA Artifact types](#tea-artifact-types) for allowed values (e.g., `BOM`, `VULNERABILITIES`, `LICENSE`).
+- __createdDate__: The date and time the TEA Artifact revision was created.
+- __distributionIds__: (optional): Array of TEA Component Release distributions that this TEA Artifact applies to. If absent or empty, the TEA Artifact applies to all distributions.
 - __formats__:  
-  An array of objects, each representing the same artefact content in a different format.
+  An array of objects, each representing the same artifact content in a different format.
   The order of the list is not significant.
   Each format object includes:
   - __mediaType__: The MIME type of the document (e.g., `application/vnd.cyclonedx+xml`).
-  - __description__: A free-text description of the artefact format.
+  - __description__: A free-text description of the artifact format.
   - __url__: A direct download URL for the artefact. This must point to an immutable resource.
   - __signatureUrl__ (optional): A direct download URL for a detached digital signature of the artefact, if available.
   - __checksums__:  
     An array of checksum objects for the artefact, each containing:
     - __algType__: The checksum algorithm used (e.g., `SHA_256`, `SHA3_512`).
     - __algValue__: The checksum value as a string.
+
+Required fields:
+
+- uuid, type, formats
 
 ### Notes
 

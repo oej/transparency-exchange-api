@@ -819,7 +819,7 @@ components:
             May be disabled after the creation of the release object, but can't be enabled after creation of an object.
         identifiers:
           type: array
-          description: List of identifiers for the component
+          description: Array of identifiers for the component
           items:
             "$ref": "#/components/schemas/identifier"
         distributions:
@@ -890,27 +890,27 @@ components:
       type: object
       properties:
         distributionId:
-          description: A unique identifier for the TEA Distribution object
+          description: A unique identifier for the TEA Distribution object (uuid)
           "$ref": "#/components/schemas/uuid"
         description:
           type: string
-          description: Free-text description of the distribution.
+          description: Free-text description of the distribution
         identifiers:
           type: array
-          description: List of identifiers specific to this distribution.
+          description: Array of identifiers specific to this distribution
           items:
             $ref: "#/components/schemas/identifier"
         url:
           type: string
-          description: Direct download URL for the distribution.
+          description: Direct download URL for the distribution
           format: url
         signatureUrl:
           type: string
-          description: Direct download URL for the distribution's external signature.
+          description: Direct download URL for the distribution's detached signature
           format: url
         checksums:
           type: array
-          description: List of checksums for the distribution.
+          description: Array of checksums for the distribution
           items:
             "$ref": "#/components/schemas/checksum"
       required:
@@ -1024,8 +1024,8 @@ components:
           description: |
             TEA Collection version, incremented each time its content changes.
             Versions start with 1.
-        date:
-          description: The date when the TEA Collection version was created.
+        createdDate:
+          description: Timestamp when the TEA Collection version was created.
           "$ref": "#/components/schemas/date-time"
         belongsTo:
           description: Indicates whether this collection belongs to a Component Release or a Product Release
@@ -1035,7 +1035,7 @@ components:
           "$ref": "#/components/schemas/collection-update-reason"
         artifacts:
           type: array
-          description: List of TEA Artifact objects.
+          description: Array of TEA Artifact objects.
           items:
             "$ref": "#/components/schemas/artifact"
       examples:
@@ -1118,17 +1118,17 @@ components:
           default: 1
         name:
           type: string
-          description: Name of TEA Artifact
+          description: A human-readable name for the artefact
         type:
           description: Type of TEA Artifact
           "$ref": "#/components/schemas/artifact-type"
         createdDate:
-          description: The date when the TEA Artifact revision was created.
+          description: The date and time the TEA Artifact revision was created.
           "$ref": "#/components/schemas/date-time"
         distributionIds:
           type: array
           description: |
-            List of TEA Component Release distributions that this TEA Artifact applies to.
+            Array of TEA Component Release distributions that this TEA Artifact applies to.
             If absent or empty, the TEA Artifact applies to all distributions.
           items:
             "$ref": "#/components/schemas/uuid"
@@ -1197,15 +1197,15 @@ components:
           description: A free text describing the TEA Artifact
         url:
           type: string
-          description: Direct download URL for the TEA Artifact
+          description: Direct download URL for the TEA Artifact. This must point to an immutable resource.
           format: url
         signatureUrl:
           type: string
-          description: Direct download URL for an external signature of the TEA Artifact
+          description: Direct download URL for an detached signature of the TEA Artifact, if available
           format: url
         checksums:
           type: array
-          description: List of checksums for the TEA Artifact
+          description: Array of checksums for the TEA Artifact
           items:
             "$ref": "#/components/schemas/checksum"
     checksum:
