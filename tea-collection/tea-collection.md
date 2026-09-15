@@ -147,7 +147,7 @@ producing different alerts than other changes of a collection.
 {
   "uuid": "4c72fe22-9d83-4c2f-8eba-d6db484f32c8",
   "version": 10,
-  "date": "2024-12-13T00:00:00Z",
+  "createdDate": "2024-12-13T00:00:00Z",
   "updateReason": {
     "type": "ARTIFACT_UPDATED",
     "comment": "VDR file updated"
